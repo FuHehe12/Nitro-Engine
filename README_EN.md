@@ -257,7 +257,7 @@ MIT License with Attribution Requirement.
 You are free to use, modify, and distribute this software. For **proprietary or commercial use**, please include attribution in your documentation or about page:
 
 ```
-Translation skill based on: https://github.com/your-username/translate-skill
+Translation skill based on: https://github.com/FuHehe12/Nitro-Engine
 ```
 
 For open-source projects, standard MIT terms apply (just keep the license file).

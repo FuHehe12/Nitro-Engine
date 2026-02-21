@@ -257,7 +257,7 @@ MIT 许可证 + 署名要求。
 你可以自由使用、修改和分发本软件。**闭源或商业使用**时，请在文档或关于页面中注明来源：
 
 ```
-翻译技能基于：https://github.com/your-username/translate-skill
+翻译技能基于：https://github.com/FuHehe12/Nitro-Engine
 ```
 
 开源项目使用只需保留许可证文件即可。
