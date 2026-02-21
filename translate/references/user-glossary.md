@@ -1,61 +1,63 @@
-# 用户行业术语表
+# User Domain Glossary
 
-> 随使用逐步积累的术语表。翻译时自动加载，与当前文档提取的术语合并后写入临时 `_glossary.md`。
-> 翻译完成后，主 Agent 会询问是否将本次新术语回写到此文件。
+> A glossary that accumulates over time through use. Automatically loaded during translation
+> and merged with terms extracted from the current document into a temporary `_glossary.md`.
+> After translation, the primary Agent will ask whether to write new terms from this session
+> back to this file.
 >
-> **此文件不会被清理**——它是你的持久化资产。
+> **This file is never cleaned up** — it is your persistent asset.
 
 ---
 
-## 一、保留原文（不翻译）
+## 1. Keep As-Is (Do Not Translate)
 
-> 专有名词、品牌名、技术缩写等，在中文行文中直接使用原文。
+> Proper nouns, brand names, technical abbreviations, etc. — used as-is in the target text.
 
-| 术语 | 说明 | 示例用法 |
-|------|------|----------|
-| API | 应用编程接口 | 调用 API 获取数据 |
-| Docker | 容器平台 | 使用 Docker 部署服务 |
-| GitHub | 代码托管平台 | 代码托管在 GitHub 上 |
-| Kubernetes | 容器编排系统 | 在 Kubernetes 集群上运行 |
-| GraphQL | 查询语言 | 通过 GraphQL 接口查询 |
-| OAuth | 授权协议 | 接入 OAuth 2.0 认证 |
-| WebSocket | 双向通信协议 | 建立 WebSocket 连接 |
+| Term | Description | Example Usage |
+|------|-------------|---------------|
+| API | Application programming interface | Call the API to fetch data |
+| Docker | Container platform | Deploy services using Docker |
+| GitHub | Code hosting platform | Code is hosted on GitHub |
+| Kubernetes | Container orchestration system | Running on a Kubernetes cluster |
+| GraphQL | Query language | Query through the GraphQL interface |
+| OAuth | Authorization protocol | Integrate OAuth 2.0 authentication |
+| WebSocket | Bidirectional communication protocol | Establish a WebSocket connection |
 
-## 二、统一译法（全文一致）
+## 2. Unified Renderings (Consistent Throughout)
 
-> 需要翻译但必须全文统一的术语。
+> Terms that must be translated but kept consistent across the entire text.
 
-| 原文 | 统一译法 | 避免使用 | 备注 |
-|------|----------|----------|------|
-| agent | 智能体 | 代理、代理人 | AI 语境下 |
-| pipeline | 流水线 | 管道、管线 | CI/CD 语境下 |
-| token | token | 令牌 | LLM 语境下保留原文 |
+| Source | Rendering (zh-CN) | Avoid | Notes |
+|--------|-------------------|-------|-------|
+| agent | 智能体 | 代理、代理人 | AI context |
+| pipeline | 流水线 | 管道、管线 | CI/CD context |
+| token | token | 令牌 | Keep as-is in LLM context |
 | fine-tune | 微调 | 精调 | |
-| prompt | 提示词 | 提示、指令 | LLM 语境下 |
-| inference | 推理 | 推断 | 模型推理 |
+| prompt | 提示词 | 提示、指令 | LLM context |
+| inference | 推理 | 推断 | Model inference |
 | deploy | 部署 | 布署 | |
 | benchmark | 基准测试 | 标杆 | |
-| latency | 延迟 | 时延、潜伏期 | 性能语境 |
+| latency | 延迟 | 时延、潜伏期 | Performance context |
 | throughput | 吞吐量 | 通量 | |
-| context window | 上下文窗口 | 语境窗口 | LLM 语境 |
-| hallucination | 幻觉 | 臆造 | LLM 语境 |
-| embedding | 嵌入 / embedding | 嵌套 | 视上下文决定是否保留原文 |
-| retrieval | 检索 | 取回 | RAG 语境 |
+| context window | 上下文窗口 | 语境窗口 | LLM context |
+| hallucination | 幻觉 | 臆造 | LLM context |
+| embedding | 嵌入 / embedding | 嵌套 | Keep as-is or translate depending on context |
+| retrieval | 检索 | 取回 | RAG context |
 
-## 三、多义词处理
+## 3. Polysemous Terms
 
-> 同一个词在不同语境下有不同译法。
+> Terms with different renderings depending on context.
 
-| 原文 | 语境 | 译法 | 示例 |
-|------|------|------|------|
-| model | 机器学习 | 模型 | 训练模型 |
-| model | 设计模式 | 模式 | MVC 模式 |
-| model | 数据库 | 模型 | 数据模型 |
-| state | 程序状态 | 状态 | 应用状态 |
-| state | 地理/政治 | 州/国家 | 美国各州 |
-| run | 执行程序 | 运行 | 运行脚本 |
-| run | 实验 | 一轮/一次 | 第三轮实验 |
-| scale | 动词 | 扩展 | 水平扩展 |
-| scale | 名词 | 规模 | 大规模部署 |
-| serve | 部署服务 | 部署 / 提供服务 | 模型部署上线 |
-| serve | 网络 | 分发 | 分发静态文件 |
+| Source | Context | Rendering | Example |
+|--------|---------|-----------|---------|
+| model | Machine learning | 模型 | Train a model |
+| model | Design pattern | 模式 | MVC pattern |
+| model | Database | 模型 | Data model |
+| state | Program state | 状态 | Application state |
+| state | Geography/politics | 州/国家 | US states |
+| run | Execute program | 运行 | Run a script |
+| run | Experiment | 一轮/一次 | Third run of experiment |
+| scale | Verb | 扩展 | Horizontal scaling |
+| scale | Noun | 规模 | Large-scale deployment |
+| serve | Deploy service | 部署 / 提供服务 | Deploy model to production |
+| serve | Networking | 分发 | Serve static files |
