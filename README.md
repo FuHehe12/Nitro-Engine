@@ -2,6 +2,10 @@
 
 [English](./README_EN.md)
 
+> Claude Code skill for natural Markdown translation. AI-powered, multi-language, fluent output.
+
+**关键词 / Keywords**: `claude-code` `claude-code-skill` `markdown-translation` `ai-translation` `natural-translation` `document-translation` `llm`
+
 > 翻译即写作——不是转换，而是重新表达。
 
 一个 Claude Code 技能，专注于将 Markdown 文档翻译成**自然流畅的译文**。
