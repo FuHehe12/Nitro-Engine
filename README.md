@@ -4,8 +4,6 @@
 
 > Claude Code skill for natural Markdown translation. AI-powered, multi-language, fluent output.
 
-**关键词 / Keywords**: `claude-code` `claude-code-skill` `markdown-translation` `ai-translation` `natural-translation` `document-translation` `llm`
-
 **版本 / Version**: `v1.0.0`
 
 > 翻译即写作——不是转换，而是重新表达。

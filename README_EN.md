@@ -6,8 +6,6 @@
 
 A Claude Code skill for translating Markdown documents with a focus on **natural, fluent prose**.
 
-**Keywords**: `claude-code` `claude-code-skill` `markdown-translation` `ai-translation` `natural-translation` `document-translation` `llm`
-
 **Version**: `v1.0.0`
 
 **Supports any language pair.** Currently tested on English → Chinese. Community testing and feedback for other language pairs are welcome.
