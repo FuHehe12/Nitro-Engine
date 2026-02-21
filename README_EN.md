@@ -254,12 +254,12 @@ Built for Claude Code, it leverages agent capabilities to maintain consistency a
 
 ## License
 
-MIT License with Attribution Requirement.
+[CC BY 4.0](./LICENSE)
 
-You are free to use, modify, and distribute this software. For **proprietary or commercial use**, please include attribution in your documentation or about page:
+Free to use, modify, and distribute, including commercial use. **One requirement: attribution**.
+
+Please credit:
 
 ```
 Translation skill based on: https://github.com/FuHehe12/Nitro-Engine
 ```
-
-For open-source projects, standard MIT terms apply (just keep the license file).
