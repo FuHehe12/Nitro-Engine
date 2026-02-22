@@ -128,7 +128,7 @@ This skill handles **Markdown and plain text**. Other formats (web pages, PDFs, 
 
 5. **Split large files** (if required):
    ```bash
-   python {SKILL_DIR}/scripts/split_md.py {source_file} --max-lines 600 --output-dir {source_dir}/_parts/
+   python {SKILL_DIR}/scripts/split_md.py {source_file} --max-lines 600 --max-size 20000 --output-dir {source_dir}/_parts/
    ```
    The script automatically generates: `_part_NN.md` (segments), `_part_NN_context.json` (bridging context containing the last 5 lines of the preceding segment as `preceding_lines` and the first 3 lines of the following segment as `following_lines`), and `_split_manifest.json` (the manifest).
 
