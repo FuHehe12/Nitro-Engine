@@ -191,11 +191,6 @@ During peak hours, GLM Coding plans may have insufficient resources. Before star
    Limit concurrent sub-agents to N (adjust N based on your subscription tier).
    ```
 
-2. For very large documents during peak hours, request smaller segment splits:
-   ```
-   Split into smaller segments (e.g., 300 lines each) instead of default 600 lines.
-   ```
-
 This prevents "resource exhausted" errors and improves success rates.
 
 ### Model Compatibility
