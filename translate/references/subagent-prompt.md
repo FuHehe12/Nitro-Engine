@@ -48,7 +48,6 @@ These five dimensions apply regardless of what the translation brief says:
 - **Do not translate code block contents**: but inline code comments may be translated
 - **Translate link text**, keep URLs unchanged
 - **YAML frontmatter**: leave untranslated
-- **New terms not in the glossary**: flag with `[TERM: original → suggested translation]`
 - **Segment boundaries**: consider how the segment connects to what comes before and after; avoid abrupt starts or endings
 
 ## Output Quality Checklist

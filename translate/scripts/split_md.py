@@ -46,6 +46,8 @@ def parse_args():
     parser.add_argument("--min-part-lines", type=int, default=20,
                         help="拆分后片段最小行数；低于该值时尝试与相邻片段合并（默认 20，设为 0 表示关闭）")
     parser.add_argument("--output-dir", default="./_parts/", help="输出目录（默认 ./_parts/）")
+    parser.add_argument("--force", action="store_true",
+                        help="强制产出 manifest，即使文件未超过拆分阈值（单片段输出）")
     return parser.parse_args()
 
 
@@ -442,40 +444,44 @@ def main():
 
     # 检查是否需要拆分
     if total_lines <= args.max_lines and total_bytes <= args.max_size:
-        print("文件未超过任何阈值，无需拆分。")
-        sys.exit(0)
+        if not args.force:
+            print("文件未超过任何阈值，无需拆分。")
+            sys.exit(0)
+        # --force：将整个文件视为单片段，直接进入输出流程
+        print("文件未超过阈值，但 --force 已启用，将作为单片段输出。")
+        boundaries = [0, total_lines]
+    else:
+        # 找标题位置
+        headings = find_heading_positions(lines)
+        print(f"发现 {len(headings)} 个标题")
 
-    # 找标题位置
-    headings = find_heading_positions(lines)
-    print(f"发现 {len(headings)} 个标题")
-
-    # 确定拆分点
-    split_points = find_split_points(
-        lines, headings,
-        args.max_lines, args.min_lines,
-        byte_prefix=byte_prefix,
-        max_size=args.max_size,
-    )
-
-    if not split_points:
-        print("未找到合适的拆分点。")
-        sys.exit(0)
-
-    boundaries = [0] + split_points + [total_lines]
-    if args.min_part_lines > 0 and len(boundaries) > 2:
-        merged_boundaries = merge_small_parts(
-            boundaries,
-            byte_prefix,
-            args.max_lines,
-            args.max_size,
-            args.min_part_lines,
+        # 确定拆分点
+        split_points = find_split_points(
+            lines, headings,
+            args.max_lines, args.min_lines,
+            byte_prefix=byte_prefix,
+            max_size=args.max_size,
         )
-        if len(merged_boundaries) != len(boundaries):
-            print(
-                f"小片段合并：{len(boundaries) - 1} 片 -> {len(merged_boundaries) - 1} 片 "
-                f"（阈值：{args.min_part_lines} 行）"
+
+        if not split_points:
+            print("未找到合适的拆分点。")
+            sys.exit(0)
+
+        boundaries = [0] + split_points + [total_lines]
+        if args.min_part_lines > 0 and len(boundaries) > 2:
+            merged_boundaries = merge_small_parts(
+                boundaries,
+                byte_prefix,
+                args.max_lines,
+                args.max_size,
+                args.min_part_lines,
             )
-        boundaries = merged_boundaries
+            if len(merged_boundaries) != len(boundaries):
+                print(
+                    f"小片段合并：{len(boundaries) - 1} 片 -> {len(merged_boundaries) - 1} 片 "
+                    f"（阈值：{args.min_part_lines} 行）"
+                )
+            boundaries = merged_boundaries
 
     parts = []
 

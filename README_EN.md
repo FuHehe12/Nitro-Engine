@@ -6,7 +6,7 @@
 
 A Claude Code skill for translating Markdown documents with a focus on **natural, fluent prose**.
 
-**Version**: `v1.0.0`
+**Version**: `v1.1.1`
 
 **Supports any language pair.** Currently tested on English → Chinese. Community testing and feedback for other language pairs are welcome.
 
@@ -44,7 +44,7 @@ This is hard to achieve. This skill is an attempt to apply AI capabilities in se
 
 ## How It Works
 
-### Three-Step Process
+### Three-Step Process (Translation Methodology)
 
 Most translation tools skip straight to "convert." This skill follows a different path:
 
@@ -97,31 +97,36 @@ Specify the target locale in the translation brief, and the skill adjusts accord
 
 ---
 
-## Workflow
+## Execution Workflow (Aligned with `translate/SKILL.md`)
 
 ```
 Phase 0: Input Analysis
-├── Detect language, assess scale, choose strategy
+├── Detect language, count files/lines, confirm target language
+├── Report the plan to user and wait for confirmation
 │
 Phase 1: Read-Through & Preparation
 ├── Generate glossary (_glossary.md)
 ├── Generate translation brief (_translation_brief.md)
-├── Split large files if needed (>1000 lines)
+├── Unconditional split (scripts handle both small and large files)
 │
-Phase 1.5: Tone Anchoring (large files only)
-├── Translate a representative passage as style reference
+Phase 1.5: Tone Anchoring (multi-segment only)
+├── When parts_count >= 2, translate a representative passage into _tone_sample.md
 │
 Phase 2: Translation Execution
-├── Small files: primary agent translates directly
-├── Large files: sub-agents translate in parallel
+├── All segments are translated by sub-agents (primary agent does not translate body text directly)
+├── Parallel execution with health checks and retry on failures
 │
 Phase 3: Verification & Merge
-├── Format check, terminology consistency
-├── Merge segments, smooth boundaries
+├── Pre-merge gate checks (filename/range checks)
+├── Merge segments, then review boundary continuity and term consistency
 │
-Phase 4: Output Cleanup
-├── Write new terms back to user glossary
-├── Clean up temporary files
+Phase 4: Optional Refinement (only on explicit user request)
+├── A. Format repair (heading hierarchy, HTML leftovers, equations, etc.)
+├── B. Content refinement (reduce translationese, term precision, style unification)
+│
+Phase 5: Cleanup
+├── Remove temp files (_glossary.md / _translation_brief.md / _tone_sample.md / _parts/)
+├── Keep persistent user files (user-glossary.md / user-samples.md)
 ```
 
 ---
@@ -177,7 +182,7 @@ translate/
 
 This skill uses a primary agent with sub-agents for parallel translation. It's a **token killer**.
 
-- For long documents (>1000 lines), multiple sub-agents are dispatched simultaneously
+- All files go through split + sub-agent flow; long documents dispatch more concurrent sub-agents
 - **Claude Code** is required (this is a Claude Code skill)
 - A **Coding subscription plan** is strongly recommended (Claude Max, GLM Coding, or similar)
 - Pay-per-use API will get expensive quickly for large documents
@@ -224,7 +229,7 @@ MinerU's output often has incorrect heading levels and minor Markdown syntax iss
 
 - **Input formats**: Markdown and plain text only. PDFs, Word docs, and web pages must be converted to Markdown first.
 - **Language coverage**: Supports any language pair. Currently tested on English → Chinese; other pairs await community verification.
-- **Code blocks**: Contents of code blocks are preserved as-is (inline code comments may be translated).
+- **Code blocks and inline code**: Preserve as-is; code comments may be translated when needed.
 - **Quality ceiling**: The skill provides structure and process, but final quality depends on the underlying model's writing ability.
 
 ---

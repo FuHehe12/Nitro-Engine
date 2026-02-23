@@ -1,6 +1,6 @@
 ---
 name: translate
-description: "Accurately and fluently translates source text into another language, supporting any language pair. Default target language is Chinese. Use this skill when the user requests translation of Markdown files, batch document translation, or text content translation. Trigger phrases: translate, 翻译,translate markdown, translate document, Chinese translation, batch translate."
+description: "Accurately and fluently translates source text into another language, supporting any language pair. Default target language is Chinese. Use this skill when the user requests translation of Markdown files, batch document translation, or text content translation. Trigger phrases: translate, 翻译, translate markdown, translate document, Chinese translation, batch translate."
 allowed-tools: Read, Write, Edit, Task, Glob, Grep, Bash
 ---
 
@@ -79,7 +79,7 @@ Accordingly, writing craft (precision, rhythm, register, naturalness), translati
 | Skill resources (read-only) | `{SKILL_DIR}/references/` | User-persisted files that accumulate over time |
 | Temporary files | Same directory as source file | `_glossary.md`, `_translation_brief.md`, `_tone_sample.md` |
 | Split segments | `_parts/` subdirectory of source file directory | Segments and manifest for large-file splits |
-| Output file | Same directory as source file | `{filename}_zh.md` (suffix matches target language) |
+| Output file | Same directory as source file | `{filename}_zh.md` |
 
 ---
 
@@ -89,17 +89,9 @@ This skill handles **Markdown and plain text**. Other formats (web pages, PDFs, 
 
 **Language detection**: Source language is detected automatically. The default target language is Chinese (zh-CN); the user may specify a different target language or locale.
 
-**Scale assessment and strategy**:
+**Unified pipeline**: All files follow the same flow — unconditional split → sub-agent translation → unconditional merge. The AI makes no scale-based branching decisions; all scale logic is handled by the scripts.
 
-| Scenario | Strategy |
-|----------|----------|
-| Single file ≤ 1000 lines | Primary agent translates directly |
-| Single file > 1000 lines | Split → tone anchoring → parallel → merge |
-| Multiple files | Shared glossary and translation brief → tone anchoring → parallel processing |
-
-**Decision logic**:
-- Single file ≤ 1000 lines → proceed immediately, no user confirmation needed
-- Single file > 1000 lines or multiple files → report the plan to the user (file count, total line count, translation strategy) and wait for confirmation before proceeding
+**User confirmation**: Report the translation plan to the user (file count, total line count, target language) and wait for confirmation before proceeding.
 
 ### Phase 1: Read-Through and Preparation
 
@@ -115,9 +107,10 @@ This skill handles **Markdown and plain text**. Other formats (web pages, PDFs, 
    - From `user-glossary.md`, **import only entries relevant to the current document's domain**; ignore unrelated domain terminology.
    - Extract new terms from the current document and merge with the filtered user-accumulated entries.
    - Three sections: terms to preserve as-is, standardized renderings, polysemous term handling.
+   > Once `_glossary.md` is generated, the user may pause at this point to review and revise the glossary — adjusting entries, adding terms, or removing entries that do not apply. All subsequent translation will use the final version as the baseline. If the user makes no adjustments, proceed directly.
 4. **Generate the translation brief** (following the template at `{SKILL_DIR}/references/translation-brief-template.md`; write to temporary `_translation_brief.md`):
    - **Text type**: Technical documentation / Academic paper / Blog / Tutorial / Product copy / Other
-   - **Translation tone**: Surface features (person, formality, tense preference) + deep features (emotional register, narrative rhythm, lexical preferences, signature expressions, the movement of thought, a sketch of the original "voice")
+   - **Translation tone**: Surface features (person, formality, tense preference) + deep features (emotional register, narrative rhythm, rhetorical density, author-reader relationship, lexical preferences, signature expressions, the movement of thought, a sketch of the original "voice")
    - **Language pair**: Source language (auto-detected) → target language (default: Chinese)
    - **Target locale**: Determine the locale (default: zh-CN), which governs lexical choices, terminology, and expressive conventions. Regional differences are documented in `references/locale-styles.md`.
    - **Reader profile**: Who the translation is for, which affects vocabulary and depth of expression
@@ -126,36 +119,23 @@ This skill handles **Markdown and plain text**. Other formats (web pages, PDFs, 
    - **Cross-file consistency** (multi-file scenarios): Shared glossary, shared brief, cross-file linkage
 > ⚠️ **Steps 2–4 must be executed regardless of file size.** For small files, the output can be brief — but it cannot be skipped. The purpose of the temporary files is to make translation decisions auditable and to give sub-agents an inheritable style baseline. `_glossary.md` and `_translation_brief.md` are created in the **source file's directory**.
 
-5. **Split large files** (if required):
+5. **Split the file** (unconditional):
    ```bash
-   python {SKILL_DIR}/scripts/split_md.py {source_file} --max-lines 600 --max-size 20000 --output-dir {source_dir}/_parts/
+   python {SKILL_DIR}/scripts/split_md.py {source_file} --force --max-lines 600 --max-size 20000 --output-dir {source_dir}/_parts/
    ```
-   The script automatically generates: `_part_NN.md` (segments), `_part_NN_context.json` (bridging context containing the last 5 lines of the preceding segment as `preceding_lines` and the first 3 lines of the following segment as `following_lines`), and `_split_manifest.json` (the manifest).
+   `--force` ensures a manifest is produced even for small files (single-segment output). The script automatically generates: `_part_NN.md` (segments), `_part_NN_context.json` (bridging context containing the last 5 lines of the preceding segment as `preceding_lines` and the first 3 lines of the following segment as `following_lines`), and `_split_manifest.json` (the manifest).
 
-### Phase 1.5: Tone Anchoring (Large-Scale Translations Only)
+### Phase 1.5: Tone Anchoring (Multi-Segment Translations)
 
-> Execute this phase when translating a single file > 1000 lines or multiple files, to ensure stylistic consistency.
+> Execute this phase when the manifest's `parts_count` ≥ 2, to ensure stylistic consistency. Single-segment translations skip this phase.
 
 1. **Select a representative passage**: Choose a passage from the source that is content-rich and stylistically representative (300–500 lines), preferring paragraphs that mix technical description with narrative.
 2. **Primary agent translates this passage**: Translate it against the glossary and translation brief, producing a "tone sample" and writing it to `_tone_sample.md`.
 3. **Use of the tone sample**: `_tone_sample.md` is passed to all sub-agents alongside `user-samples.md` as a style reference anchor.
 
-Small-scale translations (handled directly by the primary agent) skip this phase.
-
 ### Phase 2: Translation Execution
 
-#### Small-Scale (Primary Agent Translates Directly, ≤ 1000 Lines)
-
-Translate the full text against the following three materials and output to `{filename}_zh.md` (or the user-specified target language suffix) in the source file's directory:
-- `_glossary.md` (temporary glossary generated in Phase 1)
-- `_translation_brief.md` (temporary translation brief generated in Phase 1)
-- `{SKILL_DIR}/references/user-samples.md` (user style samples, if present)
-
-**`[TERM: ...]` annotations**: When a new term is encountered during translation that is not in `_glossary.md`, annotate it inline in the translation as `[TERM: original → suggested rendering]`. Do not list them separately; they will be processed in Phase 4.
-
-#### Large-Scale (Sub-Agents Translate in Parallel, > 1000 Lines)
-
-> ⚠️ **Sub-agents are required**: Large-scale translations (> 1000 lines or multiple files) must be processed in parallel through sub-agents. The primary agent must not directly translate segments. The primary agent's responsibilities are preparation, task dispatch, and result verification.
+> ⚠️ Except for Phase 1.5 tone anchoring, **all segments are translated by sub-agents**. The primary agent does not directly translate any segment. The primary agent's responsibilities are preparation, task dispatch, and result verification.
 
 Dispatch a sub-agent for each segment using the template in `references/subagent-prompt.md`.
 
@@ -163,104 +143,86 @@ Sub-agent configuration:
 - `subagent_type`: "general-purpose"
 - `model`: "sonnet" (quality-first)
 - Multiple sub-agents launched in parallel
-- Each sub-agent receives: source segment, glossary, translation brief, bridging context, user style samples, tone sample
+- Each sub-agent receives: source segment, glossary, translation brief, bridging context, translation samples, tone sample (for multi-segment translations)
 - **Output requirements**: Output must go to the designated `{part}_zh.md` file; generating merged files (e.g., `_part_47-50_zh.md`) is not permitted; translating beyond the assigned source range is not permitted.
 
 **Multi-file parallel strategy**: Use TaskCreate/TaskList to track translation progress for each file/segment, and ensure all tasks are complete before proceeding to the next phase.
+
+**Health check** (executed after all sub-agents complete): Confirm that all segments have a corresponding `_zh.md` file; if any segment is missing, include it in the error recovery handling below.
 
 **Error recovery** (with failure criteria):
 
 A sub-agent is considered to have failed if any of the following conditions is met:
 1. The output file does not exist.
 2. The output line count is less than 30% of the source line count.
-3. The output contains large blocks of untranslated source text (10 or more consecutive lines identical to the source).
-4. The output filename does not match expectations (e.g., a merged file was generated instead of individual segment files).
+3. The output filename does not match expectations (e.g., a merged file was generated instead of individual segment files).
 
 Handling procedure:
-- Sub-agent failure → retry once with sonnet.
+- Sub-agent failure or missing segment → retry once with sonnet.
 - **Still failing → compile all failed segments, report the failure reasons and a list of affected segments to the user, and let the user decide how to proceed.**
 - The primary agent must not take over translation unless explicitly requested by the user.
 
-### Phase 3: Verification
+### Phase 3: Verification and Merge
 
-#### Pre-Merge Verification
+#### Pre-Merge Verification (Gate)
 
 > **Inspect all translated segments before merging** to confirm they meet standards and reduce post-merge issues.
 
-**Checklist**:
-1. **Completeness check**: Confirm that all segments have a corresponding translated file.
-2. **Filename check**: Confirm there are no unexpected merged files (e.g., `_part_47-50_zh.md`).
-3. **Scope check**: Spot-check several segments to confirm none extends beyond the source range.
-4. **Format compliance check**: Executed by sub-agents, verifying against the formatting requirements in the translation brief generated in Phase 1:
-   - Heading hierarchy is contiguous
-   - Code blocks are properly closed
-   - List indentation is correct
-   - Table formatting is complete
+**Primary agent checklist** (execute each item before merging):
+1. **Filename check**: Confirm there are no unexpected merged files (e.g., `_part_47-50_zh.md`).
+2. **Scope check**: Spot-check several segments to confirm none extends beyond the source range.
 
 **Handling check failures**:
-- Problem segments found → compile a list and report to the user
-- Ask the user whether corrections or re-translation are needed
-- Execute corrections or re-translation after user confirmation
+- Problem segments found → compile a list and report to the user.
+- Ask the user whether corrections or re-translation are needed.
+- Execute corrections or re-translation after user confirmation.
 
-**Automatic merge** (split translations only):
+**Execute merge**:
 ```bash
 python {SKILL_DIR}/scripts/merge_md.py --manifest {source_dir}/_parts/_split_manifest.json --output {source_dir}/{filename}_zh.md
 ```
 
-The merge script automatically checks: heading hierarchy continuity, code block closure, and link integrity.
+The merge script automatically checks heading hierarchy continuity, code block closure, and link integrity, and will report any issues found in the output.
 
-**Primary agent review**:
-1. Confirm all sub-agent / segment translations are complete.
-2. Execute the pre-merge verification (see checklist above).
-3. Merge the split segments.
-4. Process `[TERM: ...]` annotations for new terms.
-5. Large files: quickly inspect segment boundaries (5 lines on each side) to ensure contextual continuity.
-6. Multiple files: run a cross-file terminology consistency scan.
+**Post-merge review**:
+1. Multi-segment: quickly inspect segment boundaries (5 lines on each side) to ensure contextual continuity.
+2. Multiple files: run a cross-file terminology consistency scan.
 
-**Optional: Refinement**
+### Phase 4: Optional Refinement
 
-The translation philosophy emphasizes rewriting over sentence-by-sentence rendering; high-quality translation execution already internalizes awareness of translationese. Refinement is an **optional step**, considered in the following scenarios:
-- The user explicitly requests refinement.
-- The primary agent identifies obvious translationese or stylistic inconsistency during review.
+After merging, the primary agent asks the user in sequence whether either of the following two optional refinement steps is needed. **Execute only when the user explicitly requests it** — do not trigger automatically. **Load `references/refinement-guide.md` only after the user confirms.**
 
-Refinement is executed by sub-agents under primary agent oversight. See `references/refinement-guide.md` for details.
+**Step A: Format Repair** (optional)
 
-#### Post-Merge Quality Check (Optional)
+Repair format issues that require semantic understanding: heading hierarchy disorder (produced by tools such as MinerU), residual HTML tags, malformed equation formatting, etc. Executed by sub-agents; see `references/refinement-guide.md` for details.
 
-> **This step requires user input.** If the user wishes, sub-agents can perform a quality check.
+**Step B: Content Refinement** (optional)
 
-**What is checked**:
-1. **Format check**: Executed by sub-agents; checks formatting standards of the final merged file.
-2. **Terminology consistency**: Scans for consistent use of glossary terms throughout the translation.
-3. **Translationese detection**: Checks for obvious translationese issues.
-4. **Stylistic consistency**: Spot-checks multiple sections to verify uniform translation style.
+Improve the prose quality of the translation: eliminate translationese, adjust terminology precision, unify style. Executed by sub-agents; see `references/refinement-guide.md` for details.
 
-**How to execute**:
-- Ask the user whether to run the quality check.
-- After user confirmation, sub-agents execute the check.
-- Compile findings into a list and report to the user.
-- The user decides whether corrections are needed.
+The two steps are independent and may be executed individually or together. The primary agent oversees dispatch and result review.
 
-### Phase 4: Output Cleanup
+### Phase 5: Cleanup
 
-1. **Glossary writeback** (mandatory; must not be skipped): Scan the translation for all `[TERM: ...]` annotations, compile the list of new terms added in this session, present the list to the user, and ask whether to write them to `{SKILL_DIR}/references/user-glossary.md`. If there are no new terms, explicitly inform the user: "No new terms were identified in this session."
-2. Confirm the output file (`{filename}_zh.md`; the source file is never overwritten).
-3. Clean up temporary files:
+1. Confirm the output file (`{filename}_zh.md`; the source file is never overwritten).
+2. Clean up temporary files:
    ```bash
-   rm -f _glossary.md _translation_brief.md _tone_sample.md
-   rm -rf _parts/
+   rm -f {source_dir}/_glossary.md {source_dir}/_translation_brief.md {source_dir}/_tone_sample.md
+   rm -rf {source_dir}/_parts/
    ```
-4. **Files that are not cleaned up** (user-persisted assets):
+3. **Files that are not cleaned up** (user-persisted assets):
    - `references/user-glossary.md`
    - `references/user-samples.md`
    - `references/translation-brief-template.md`
    - `references/locale-styles.md`
+4. **Glossary sync recommendation** (conditional): If the user actively revised the glossary after `_glossary.md` was generated during this session (adding, modifying, or removing entries), recommend asking "Would you like to sync these changes to `references/user-glossary.md`?" If the user made no glossary adjustments during the session, do not trigger this recommendation by default.
+5. **Style sample recording** (optional): Ask the user whether to write a representative passage from this session's translation into `references/user-samples.md` for use as a style reference in future translations.
 
 ---
 
 ## Important Notes
 
-- **Never overwrite the source file**: Output files receive a language suffix (default: the target language code).
+- **Never overwrite the source file**: Output files receive a language suffix (default: `_zh`).
 - **Do not translate code blocks**: This includes both inline code and fenced code blocks; comments within code may be translated.
 - **Preserve original formatting**: Heading hierarchy, list indentation, table alignment, and blank line separation.
 - **Link handling**: Translate link text; leave URLs unchanged.
