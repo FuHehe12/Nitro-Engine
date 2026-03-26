@@ -6,7 +6,7 @@
 
 A Claude Code skill for translating Markdown documents with a focus on **natural, fluent prose**.
 
-**Version**: `v1.1.1`
+**Version**: `v2.0.0`
 
 **Supports any language pair.** Currently tested on English → Chinese. Community testing and feedback for other language pairs are welcome.
 
@@ -100,33 +100,24 @@ Specify the target locale in the translation brief, and the skill adjusts accord
 ## Execution Workflow (Aligned with `translate/SKILL.md`)
 
 ```
-Phase 0: Input Analysis
-├── Detect language, count files/lines, confirm target language
+Step 1: Preparation
+├── Input analysis (detect language, count files/lines, confirm target language)
 ├── Report the plan to user and wait for confirmation
-│
-Phase 1: Read-Through & Preparation
-├── Generate glossary (_glossary.md)
+├── Read through the full text; load user-persisted files (glossary, samples)
+├── Extract glossary (_glossary.md)
 ├── Generate translation brief (_translation_brief.md)
 ├── Unconditional split (scripts handle both small and large files)
 │
-Phase 1.5: Tone Anchoring (multi-segment only)
-├── When parts_count >= 2, translate a representative passage into _tone_sample.md
-│
-Phase 2: Translation Execution
-├── All segments are translated by sub-agents (primary agent does not translate body text directly)
+Step 2: Translation
+├── Tone anchoring: primary agent translates a representative passage → _tone_sample.md
+├── All segments translated by sub-agents (primary agent does not translate body text directly)
 ├── Parallel execution with health checks and retry on failures
 │
-Phase 3: Verification & Merge
-├── Pre-merge gate checks (filename/range checks)
-├── Merge segments, then review boundary continuity and term consistency
-│
-Phase 4: Optional Refinement (only on explicit user request)
-├── A. Format repair (heading hierarchy, HTML leftovers, equations, etc.)
-├── B. Content refinement (reduce translationese, term precision, style unification)
-│
-Phase 5: Cleanup
-├── Remove temp files (_glossary.md / _translation_brief.md / _tone_sample.md / _parts/)
-├── Keep persistent user files (user-glossary.md / user-samples.md)
+Step 3: Merge
+├── Pre-merge verification (filename check, scope check)
+├── Execute merge; post-merge review (boundary continuity, term consistency)
+├── Cleanup temp files (_glossary.md / _translation_brief.md / _tone_sample.md / _parts/)
+├── Ask user whether to sync terms/samples to persistent files
 ```
 
 ---
@@ -167,7 +158,6 @@ translate/
 │   └── merge_md.py                   # Merge with format validation
 └── references/
     ├── locale-styles.md              # Regional Chinese differences
-    ├── refinement-guide.md           # Optional post-translation polish
     ├── subagent-prompt.md            # Template for parallel agents
     ├── translation-brief-template.md # Style/tone documentation
     ├── user-glossary.md              # Your accumulated terms (persists)
