@@ -1,6 +1,6 @@
 # Translation Brief Template
 
-> After the Phase 1 read-through, generate a temporary `_translation_brief.md` using this template.
+> After the Step 1 read-through, generate a temporary `_translation_brief.md` using this template.
 > Sub-agents must read it before translating to ensure stylistic consistency.
 
 ---

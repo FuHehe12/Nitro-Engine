@@ -79,4 +79,4 @@ Task tool parameters:
 - prompt: [the template above, with actual paths filled in, and [target language] replaced with the specific language]
 ```
 
-Multiple segments can be dispatched to multiple sub-agents in parallel. Error recovery and failure handling are managed by the main agent — see SKILL.md Phase 2.
+Multiple segments can be dispatched to multiple sub-agents in parallel. Error recovery and failure handling are managed by the main agent — see SKILL.md Step 2.

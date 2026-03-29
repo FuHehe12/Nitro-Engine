@@ -2,254 +2,85 @@
 
 [中文文档](./README.md)
 
-> Translation is writing — not conversion, but re-expression.
+> A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill — AI translation that doesn't read like a translation.
 
-A Claude Code skill for translating Markdown documents with a focus on **natural, fluent prose**.
-
-**Version**: `v2.0.0`
-
-**Supports any language pair.** Currently tested on English → Chinese. Community testing and feedback for other language pairs are welcome.
+**Supports any language pair.** Currently tested on English → Chinese. Feedback on other pairs welcome.
 
 ---
 
-## The Problem with "Accurate" Translations
+## Maintenance Mode
 
-Machine translation is fast. AI translation is faster. But the output often reads like... a translation.
+Running `/translate` without a target file opens maintenance mode with four options:
 
-Compare:
+- **Update glossary** — Manage domain-specific term mappings; the more you add, the more accurate translations become
+- **Update translation samples** — Record translation styles you like so the AI learns your preferences
+- **Translation discussion** — Review recent translations, discuss tricky terms and style trade-offs
+- **Configuration** — View and modify translation settings
 
-| Source | Typical Translation | What This Skill Aims For |
-|--------|---------------------|--------------------------|
+All changes take effect immediately — no restart needed.
+
+---
+
+## See the Difference
+
+| Source | Typical AI Translation | Nitro Engine |
+|--------|----------------------|--------------|
 | The fact that the system is widely adopted by developers suggests that it addresses a genuine need. | 系统被开发者广泛采用的事实表明它解决了真正的需求。 | 既然这么多开发者都在用，说明它确实解决了实际问题。 |
 | It is important to note that this approach may not be suitable for all use cases. | 重要的是要注意，这种方法可能不适用于所有用例。 | 值得一提的是，这套方法并非放之四海而皆准。 |
 | The analysis of data was conducted using Python. | 数据的分析是使用 Python 进行的。 | 我们用 Python 分析了数据。 |
 
-All three "accurate" translations are grammatically correct. But they read like translations — passive, Europeanized, stiff.
-
-This skill takes a different approach: **translation as writing**. The goal isn't to convert words — it's to let the same meaning find its natural voice in the target language.
-
 ---
 
-## Core Philosophy
+## Why This Skill
 
-> **翻译即写作** — Translation is writing across languages.
+**Natural & Fluent** — Translation as writing, not word-for-word conversion. The output should read as if originally written in the target language.
 
-Not conversion. Re-expression.
+**Domain Adaptable** — Custom glossaries and translation samples tailored to your industry, team, or personal preferences. The more you use it, the better it gets.
 
-A good translation should feel like the original author wrote it in the target language. Readers shouldn't sense they're reading something that was "carried over" from another tongue.
-
-This is hard to achieve. This skill is an attempt to apply AI capabilities in service of that ideal.
-
----
-
-## How It Works
-
-### Three-Step Process (Translation Methodology)
-
-Most translation tools skip straight to "convert." This skill follows a different path:
-
-**1. Reconstruct** — Build a mental model of the source text
-- Who's speaking? To whom? In what context?
-- A technical doc feels like "an expert walking you through something"
-- A blog post feels like "a friend sharing experience"
-- This "imaginative space" sets the ceiling for translation quality
-
-**2. Negotiate** — Make judgment calls
-- What does this word *actually* mean in this context?
-- How would a native speaker naturally express this concept?
-- Decisions are captured in a glossary and translation brief
-
-**3. Write** — Compose in the target language
-- Not word-for-word substitution
-- Speaking from inside the imaginative space, in the target language
-
-### Consistency at Scale
-
-Long documents get split into segments and translated in parallel. But unlike naive parallelization:
-
-- A **translation brief** captures the document's tone, style, and key decisions *before* any translation begins
-- A **tone sample** anchors all agents to the same stylistic baseline
-- A **shared glossary** ensures terminology consistency across all segments
-
-Result: a 10,000-line document reads like one person wrote it, not ten.
-
-### Customizable for Your Domain
-
-Different fields have different terminology standards. This skill supports:
-
-- **User glossary** (`user-glossary.md`) — Define how specific terms should be translated. The skill respects your choices consistently across all documents.
-- **Translation samples** (`user-samples.md`) — Provide examples of translations you like. The skill uses them as a style reference.
-
-Over time, these files accumulate and the skill becomes increasingly aligned with your domain's conventions.
-
-### Locale-Aware (Chinese)
-
-Chinese isn't just Chinese. This skill differentiates between regions:
-
-| English | Mainland (zh-CN) | Taiwan (zh-TW) | Hong Kong (zh-HK) |
-|---------|------------------|----------------|-------------------|
-| software | 软件 | 軟體 | 軟體 |
-| program | 程序 | 程式 | 程式 |
-| network | 网络 | 網路 | 網路 |
-| database | 数据库 | 資料庫 | 資料庫 |
-
-Specify the target locale in the translation brief, and the skill adjusts accordingly.
-
----
-
-## Execution Workflow (Aligned with `translate/SKILL.md`)
-
-```
-Step 1: Preparation
-├── Input analysis (detect language, count files/lines, confirm target language)
-├── Report the plan to user and wait for confirmation
-├── Read through the full text; load user-persisted files (glossary, samples)
-├── Extract glossary (_glossary.md)
-├── Generate translation brief (_translation_brief.md)
-├── Unconditional split (scripts handle both small and large files)
-│
-Step 2: Translation
-├── Tone anchoring: primary agent translates a representative passage → _tone_sample.md
-├── All segments translated by sub-agents (primary agent does not translate body text directly)
-├── Parallel execution with health checks and retry on failures
-│
-Step 3: Merge
-├── Pre-merge verification (filename check, scope check)
-├── Execute merge; post-merge review (boundary continuity, term consistency)
-├── Cleanup temp files (_glossary.md / _translation_brief.md / _tone_sample.md / _parts/)
-├── Ask user whether to sync terms/samples to persistent files
-```
+**Built for Scale** — Multi-agent parallel translation handles massive documents and batch folder translation with consistent style throughout.
 
 ---
 
 ## Quick Start
 
-**Prerequisites**: [Claude Code](https://github.com/anthropics/claude-code) CLI with a Coding subscription plan.
+**Prerequisites**: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) + subscription plan (Claude Max or similar).
 
-1. Copy the skill to your Claude Code skills directory:
+**1. Install the skill**
 
 ```bash
+# Copy the translate/ directory to your Claude Code skills directory
 cp -r translate ~/.claude/skills/
 ```
 
-2. Invoke the skill with natural language:
+**2. Start translating**
 
 ```
 Translate path/to/document.md into Chinese.
 ```
 
-Or translate all Markdown files in a folder:
+Translate an entire folder:
 
 ```
 Translate all Markdown files under path/to/folder/ into Chinese.
 ```
 
-3. Translated files appear with language suffix (e.g., `document_zh.md`) in the same directory.
+Translated files appear in the same directory with a language suffix (e.g., `document_zh.md`).
 
 ---
 
-## What's Included
+## Notes
 
-```
-translate/
-├── SKILL.md                          # Main skill file
-├── scripts/
-│   ├── split_md.py                   # Split at semantic boundaries
-│   └── merge_md.py                   # Merge with format validation
-└── references/
-    ├── locale-styles.md              # Regional Chinese differences
-    ├── subagent-prompt.md            # Template for parallel agents
-    ├── translation-brief-template.md # Style/tone documentation
-    ├── user-glossary.md              # Your accumulated terms (persists)
-    └── user-samples.md               # Your translation samples (persists)
-```
-
----
-
-## Important Notes
-
-### Token Consumption
-
-This skill uses a primary agent with sub-agents for parallel translation. It's a **token killer**.
-
-- All files go through split + sub-agent flow; long documents dispatch more concurrent sub-agents
-- **Claude Code** is required (this is a Claude Code skill)
-- A **Coding subscription plan** is strongly recommended (Claude Max, GLM Coding, or similar)
-- Pay-per-use API will get expensive quickly for large documents
-
-### Concurrency Limits (GLM Coding Plan)
-
-During peak hours, GLM Coding plans may have insufficient resources. Before starting:
-
-1. Tell Claude to limit concurrent sub-agents based on your plan:
-   ```
-   Limit concurrent sub-agents to N (adjust N based on your subscription tier).
-   ```
-
-This prevents "resource exhausted" errors and improves success rates.
-
-### Model Compatibility
-
-Tested on **GLM5**. Other models are untested.
-
-- Theoretically, Opus should produce better writing quality
-- If you test on other models, feedback is welcome
-
-### Translating PDFs
-
-This skill only handles Markdown. For PDFs:
-
-1. Convert PDF to Markdown using [MinerU](https://github.com/opendatalab/MinerU)
-2. Run `/clear` to reset context
-3. Translate the converted Markdown
-4. Run `/clear` again
-5. Ask Claude to fix formatting issues:
-
-```
-Check and fix heading hierarchy issues in XXX_zh.md, and repair Markdown formatting.
-```
-
-**Why `/clear` between steps?** Each step involves significant context. Clearing ensures optimal performance and prevents context pollution from affecting translation quality.
-
-MinerU's output often has incorrect heading levels and minor Markdown syntax issues that need manual cleanup.
-
----
-
-## Limitations
-
-- **Input formats**: Markdown and plain text only. PDFs, Word docs, and web pages must be converted to Markdown first.
-- **Language coverage**: Supports any language pair. Currently tested on English → Chinese; other pairs await community verification.
-- **Code blocks and inline code**: Preserve as-is; code comments may be translated when needed.
-- **Quality ceiling**: The skill provides structure and process, but final quality depends on the underlying model's writing ability.
-
----
-
-## Who This Is For
-
-- People translating long technical documents who care about readability
-- People frustrated by "technically correct but unnatural" translations
-- People willing to invest a bit more time for significantly better output
-
----
-
-## Background
-
-Standard machine translation often produces output that's "accurate but painful to read" — grammatically correct, yet stiff and unnatural. The problem isn't accuracy; it's that translation is treated as word conversion rather than re-expression.
-
-This skill applies a different philosophy: translation as writing. The goal is to produce text that feels like it was originally written in the target language.
-
-Built for Claude Code, it leverages agent capabilities to maintain consistency across long documents while respecting domain-specific terminology and style preferences.
+- **Markdown and plain text only** — PDFs and other formats need conversion first (try [MinerU](https://github.com/opendatalab/MinerU))
+- **High token usage** — multi-agent parallel translation; subscription plan strongly recommended over pay-per-use
+- **Code blocks are preserved** as-is (comments can be translated)
+- **Source files are never overwritten** — output always has a language suffix
 
 ---
 
 ## License
 
-[CC BY 4.0](./LICENSE)
+[CC BY 4.0](./LICENSE) — free to use, modify, and distribute, including commercially. Just keep attribution.
 
-Free to use, modify, and distribute, including commercial use. **One requirement: attribution**.
+---
 
-Please credit:
-
-```
-Translation skill based on: https://github.com/FuHehe12/Nitro-Engine
-```
+If you find this useful, please ⭐ the repo! This project is actively maintained and updated.

@@ -1,10 +1,30 @@
 ---
 name: translate
 description: "Accurately and fluently translates source text into another language, supporting any language pair. Default target language is Chinese. Use this skill when the user requests translation of Markdown files, batch document translation, or text content translation. Trigger phrases: translate, 翻译, translate markdown, translate document, Chinese translation, batch translate."
-allowed-tools: Read, Write, Edit, Task, Glob, Grep, Bash
+allowed-tools: Read, Write, Edit, Task, Glob, Grep, Bash, AskUserQuestion
 ---
 
 This skill provides guidelines for accurate, fluent translation, with agent-based parallel processing for large files and multi-file batches.
+
+## Entry Routing
+
+Determine which mode to enter based on user input:
+
+- **Has target file** (file path, URL, pasted text) → proceed to the **Translation Workflow** below
+- **No target file** (bare `/translate` or conversation without a translation target) → enter **Maintenance Mode**
+
+### Maintenance Mode
+
+When there is no clear translation target, use AskUserQuestion to ask the user's intent, offering these options:
+
+1. **Update glossary** — Open `{SKILL_DIR}/references/user-glossary.md` and help the user add, edit, or remove term entries
+2. **Update translation samples** — Open `{SKILL_DIR}/references/user-samples.md` and help the user add or edit translation style samples
+3. **Translation discussion** — Discuss recent translations: quality review, tricky terms, style preferences, etc.
+4. **Configuration** — Read `{SKILL_DIR}/references/config.md`, display current settings, and help the user modify them
+
+> All changes in maintenance mode are written directly to the corresponding files and take effect immediately.
+
+---
 
 ## On Translation
 
@@ -22,7 +42,7 @@ Good translation goes beyond conveying information accurately. It re-expresses t
 
 ### The Nature of Translation: Reconstruct → Negotiate → Write
 
-Translation is not word-for-word conversion. It is a three-step process:
+It is a three-step process:
 
 **Step 1: Reconstruct — Build the Imaginative Space**
 
@@ -61,16 +81,7 @@ Writing is the ceiling of translation — when comprehension is sound and negoti
 
 ### Strategy Must Be Adaptive
 
-Hard-coded rules cannot cover every scenario. The same "rule" may be exactly inverted across different text types:
-
-- Passive voice: eliminate in technical docs → standard practice in academic papers
-- Rhetorical devices: avoid in technical docs → essential in literary works
-- Domestication vs. foreignization: user manuals favor domestication → cultural texts may call for strategic foreignization
-- Cognitive load: minimize aggressively in technical docs → literary works may legitimately challenge the reader
-- Linguistic economy: pursue maximum concision in technical docs → prose may require elaboration and texture
-- Regional vocabulary: mainland China uses "软件、程序、网络" → Taiwan uses "軟體、程式、網路" → Hong Kong is more heavily influenced by Cantonese
-
-Accordingly, writing craft (precision, rhythm, register, naturalness), translation techniques (domestication/foreignization, cognitive load management, long-sentence restructuring), and locale positioning (the target region's lexical system and expressive conventions) are not treated as fixed rules. They are **strategic dimensions** that are adaptively determined during the preparation step based on the characteristics of the source text and the target audience. The preparation step produces two temporary files: a **glossary** (`_glossary.md`) to standardize renderings of core terms, and a **translation brief** (`_translation_brief.md`) to capture text type, translation tone, target locale, key challenges, and targeted strategies.
+Writing craft, translation techniques, and locale positioning are not fixed rules — they are **strategic dimensions** adaptively determined during preparation based on the source text and the target audience. The same "rule" may be exactly inverted across different text types (see Step 1 for examples). The preparation step produces two temporary files: a **glossary** (`_glossary.md`) to standardize renderings of core terms, and a **translation brief** (`_translation_brief.md`) to capture text type, translation tone, target locale, key challenges, and targeted strategies.
 
 ---
 
@@ -115,6 +126,16 @@ All files follow the same flow: split → translate → merge. Scale logic is ha
    > Once `_glossary.md` is generated, the user may pause at this point to review and revise the glossary — adjusting entries, adding terms, or removing entries that do not apply. All subsequent translation will use the final version as the baseline. If the user makes no adjustments, proceed directly.
 
 5. **Generate the translation brief** (following the template at `{SKILL_DIR}/references/translation-brief-template.md`; write to temporary `_translation_brief.md`):
+
+   > **Strategy is adaptive, not fixed.** The same "rule" may be exactly inverted across different text types:
+   > - Passive voice: eliminate in technical docs → standard practice in academic papers
+   > - Rhetorical devices: avoid in technical docs → essential in literary works
+   > - Domestication vs. foreignization: user manuals favor domestication → cultural texts may call for strategic foreignization
+   > - Cognitive load: minimize aggressively in technical docs → literary works may legitimately challenge the reader
+   > - Linguistic economy: pursue maximum concision in technical docs → prose may require elaboration and texture
+   > - Regional vocabulary: mainland China uses "软件、程序、网络" → Taiwan uses "軟體、程式、網路" → Hong Kong is more heavily influenced by Cantonese
+   >
+   > The translation brief is where these adaptive decisions are made and documented.
    - **Text type**: Technical documentation / Academic paper / Blog / Tutorial / Product copy / Other
    - **Translation tone**: Surface features (person, formality, tense preference) + deep features (emotional register, narrative rhythm, rhetorical density, author-reader relationship, lexical preferences, signature expressions, the movement of thought, a sketch of the original "voice")
    - **Language pair**: Source language (auto-detected) → target language (default: Chinese)
@@ -179,6 +200,9 @@ Handling procedure:
 
 4. **Cleanup**:
    - Confirm the output file (`{filename}_zh.md`; the source file is never overwritten)
+   - Read the `keep_intermediate` setting from `{SKILL_DIR}/references/config.md`:
+     - **FALSE** (default): clean up temporary files immediately
+     - **TRUE**: list all intermediate files (glossary, translation brief, tone sample, split segments) and use AskUserQuestion to ask the user whether to delete them; clean up only after confirmation
    - Clean up temporary files:
      ```bash
      rm -f {source_dir}/_glossary.md {source_dir}/_translation_brief.md {source_dir}/_tone_sample.md
